@@ -11,14 +11,19 @@ bindto = "::,0.0.0.0"
 max_connections = 64
 
 [game]
-hostname = "Vermist Dust Sector"
+hostname = "Vermist Dust Sector: Central Command"
 lobbyenabled = true
 soft_max_players = 32
 role_timers = false
-desc = "*cough cough* ...it sure is dusty out here."
-lobbyduration = 600
-# a bit more time to hang out at centcomm
-round_restart_time = 240
+desc = "[DOWNTIME MODE] Your home away from home."
+lobbyduration = 10
+defaultpreset = "greenshift"
+map = "dredgerelay"
+map_rotation = false
+cryo_sleep_rejoining = true
+
+[events]
+enabled = false
 
 [ic]
 flavor_text = true
@@ -31,7 +36,10 @@ enable_during_round = true
 enabled_crit = true
 
 [shuttle]
-emergency_early_launch_allowed = true
+arrivals_returns = true
+auto_call_time = 60
+emergency = false
+auto_call_time = 0
 
 [infolinks]
 github = "https://github.com/vermist-sector/vermist-dust"
