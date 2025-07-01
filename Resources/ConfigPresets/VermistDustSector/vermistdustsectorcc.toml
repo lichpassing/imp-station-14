@@ -18,7 +18,7 @@ role_timers = false
 desc = "[DOWNTIME MODE] Your home away from home."
 lobbyduration = 10
 defaultpreset = "greenshift"
-map = "dredgerelay"
+map = "centcomm"
 map_rotation = false
 cryo_sleep_rejoining = true
 
