@@ -15,6 +15,18 @@
         },
         {
             "name": "xenophysarum"
+        },
+        {
+            "name": "ai_male"
+        },
+        {
+            "name": "mu_color"
+        },
+        {
+            "name": "xenophysarum_color"
+        },
+        {
+            "name": "mazmaraz_color"
         }
     ]
 }
