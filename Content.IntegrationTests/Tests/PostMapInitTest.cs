@@ -36,12 +36,13 @@ namespace Content.IntegrationTests.Tests
         {
             "CentComm",
             "CentCommImp", // imp edit
+            "CentCommVDS",
             "Dart"
         };
 
         private static readonly string[] Grids =
         {
-            "/Maps/_Impstation/centcomm.yml", // imp edit
+            "/Maps/_VDS/vds_centcomm.yml", // imp edit
             AdminTestArenaSystem.ArenaMapPath
         };
 
@@ -49,6 +50,7 @@ namespace Content.IntegrationTests.Tests
         {
             "/Maps/centcomm.yml",
             "/Maps/_Impstation/centcomm.yml", // imp edit
+            "/Maps/_VDS/vds_centcomm.yml", // VDS
 
             // Stations
             "/Maps/bagel.yml", // Contains mime's rubber stamp
@@ -149,6 +151,9 @@ namespace Content.IntegrationTests.Tests
             "Xeno",
             "Pathway",
             "Whisper",
+
+            // VDS PROTOTYPES:
+            "CentCommVDS",
 
             // NOT IN ROTATION BUT WE STILL NEED THEM TESTED SINCE THEY STILL HAVE A PROTOTYPE:
             "Eclipse",
