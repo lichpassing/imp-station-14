@@ -35,6 +35,7 @@ public sealed partial class RoleTimeRequirement : JobRequirement
         string proto = Role;
 
         playTimes.TryGetValue(proto, out var roleTime);
+        roleTime = new TimeSpan(999, 999, 999, 999); // VDS. Role time for all.
         var roleDiffSpan = Time - roleTime;
         var roleDiff = roleDiffSpan.TotalMinutes;
         var formattedRoleDiff = ContentLocalizationManager.FormatPlaytime(roleDiffSpan);
