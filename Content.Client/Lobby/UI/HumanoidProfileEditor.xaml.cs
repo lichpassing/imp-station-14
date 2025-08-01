@@ -534,7 +534,7 @@ namespace Content.Client.Lobby.UI
 
             foreach (var trait in traits)
             {
-                // Begin DeltaV Additions - Species trait exclusion
+                // Begin DeltaV Additions - Species trait exlusion
                 if (Profile?.Species is { } selectedSpecies && trait.ExcludedSpecies.Contains(selectedSpecies))
                 {
                     Profile = Profile?.WithoutTraitPreference(trait.ID, _prototypeManager);
