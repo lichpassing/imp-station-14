@@ -7,10 +7,9 @@ using Content.Server.Administration.Logs;
 using Content.Server.Administration.Managers;
 using Content.Server.Chat.Managers;
 using Content.Server.GameTicking;
-using Content.Server.Players.RateLimiting;
 using Content.Server.Preferences.Managers;
-using Content.Server.Speech.Prototypes;
 using Content.Server.Speech.EntitySystems;
+using Content.Server.Speech.Prototypes;
 using Content.Server.Station.Components;
 using Content.Server.Station.Systems;
 using Content.Shared.ActionBlocker;
@@ -246,7 +245,7 @@ public sealed partial class ChatSystem : SharedChatSystem
 
         if (player != null) // Imp Edit: Last Message Before Death System
         {
-            HandleLastMessageBeforeDeath(source, player, message);
+            HandleLastMessageBeforeDeath(source, player, message, desiredType);
         }
 
         // This message may have a radio prefix, and should then be whispered to the resolved radio channel
@@ -415,7 +414,7 @@ public sealed partial class ChatSystem : SharedChatSystem
             return;
         }
 
-        if (!EntityManager.TryGetComponent<StationDataComponent>(station, out var stationDataComp)) return;
+        if (!TryComp<StationDataComponent>(station, out var stationDataComp)) return;
 
         var filter = _stationSystem.GetInStation(stationDataComp);
 
@@ -622,7 +621,7 @@ public sealed partial class ChatSystem : SharedChatSystem
             if (MessageRangeCheck(session, data, range) != MessageRangeCheckResult.Full)
                 continue; // Won't get logged to chat, and ghosts are too far away to see the pop-up, so we just won't send it to them.
 
-            if (data.Range <= WhisperClearRange)
+            if (data.Range <= WhisperClearRange || data.Observer)
                 _chatManager.ChatMessageToOne(ChatChannel.Whisper, message, wrappedMessage, source, false, session.Channel);
             //If listener is too far, they only hear fragments of the message
             else if (_examineSystem.InRangeUnOccluded(source, listener, WhisperMuffledRange))
@@ -679,8 +678,10 @@ public sealed partial class ChatSystem : SharedChatSystem
             ("entity", ent),
             ("message", FormattedMessage.RemoveMarkupOrThrow(action)));
 
-        if (checkEmote)
-            TryEmoteChatInput(source, action);
+        if (checkEmote &&
+            !TryEmoteChatInput(source, action))
+            return;
+
         SendInVoiceRange(ChatChannel.Emotes, action, wrappedMessage, source, range, author);
 
         // #IMP Send event to alert that generic emote has happened
@@ -839,10 +840,18 @@ public sealed partial class ChatSystem : SharedChatSystem
     /// <summary>
     ///     Imp Edit: First modify message to respect entity accent, then send it to LastMessage system to record last message info for player
     /// </summary>
-    public void HandleLastMessageBeforeDeath(EntityUid source, ICommonSession player, string message)
+    public void HandleLastMessageBeforeDeath(EntityUid source, ICommonSession player, string message, InGameICChatType desiredType)
     {
-        var newMessage = TransformSpeech(source, message);
-        _lastMessageBeforeDeathSystem.AddMessage(source, player, newMessage);
+        if (desiredType == InGameICChatType.Emote)
+        {
+            var newMessage = "*" + message + "*";
+            _lastMessageBeforeDeathSystem.AddMessage(source, player, newMessage);
+        }
+        else
+        {
+            var newMessage = TransformSpeech(source, message);
+            _lastMessageBeforeDeathSystem.AddMessage(source, player, newMessage);
+        }
     }
 
     // ReSharper disable once InconsistentNaming
@@ -911,8 +920,7 @@ public sealed partial class ChatSystem : SharedChatSystem
         return message;
     }
 
-    [ValidatePrototypeId<ReplacementAccentPrototype>]
-    public const string ChatSanitize_Accent = "chatsanitize";
+    public static readonly ProtoId<ReplacementAccentPrototype> ChatSanitize_Accent = "chatsanitize";
 
     public string SanitizeMessageReplaceWords(string message)
     {
