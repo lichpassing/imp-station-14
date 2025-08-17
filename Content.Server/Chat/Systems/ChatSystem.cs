@@ -2,7 +2,6 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using Content.Server.Abilities.Mime;
 using Content.Server.Administration.Logs;
 using Content.Server.Administration.Managers;
 using Content.Server.Chat.Managers;
@@ -12,6 +11,7 @@ using Content.Server.Speech.EntitySystems;
 using Content.Server.Speech.Prototypes;
 using Content.Server.Station.Components;
 using Content.Server.Station.Systems;
+using Content.Shared.Abilities.Mime; // imp
 using Content.Shared.ActionBlocker;
 using Content.Shared.Administration;
 using Content.Shared.CCVar;
@@ -71,7 +71,7 @@ public sealed partial class ChatSystem : SharedChatSystem
     public const int VoiceRange = 10; // how far voice goes in world units
     public const int WhisperClearRange = 2; // how far whisper goes while still being understandable, in world units
     public const int WhisperMuffledRange = 5; // how far whisper goes at all, in world units
-    public const string DefaultAnnouncementSound = "/Audio/Announcements/announce.ogg";
+     //imp. gutted default announcement sounds, announcersystem handles them now.
 
     private bool _loocEnabled = true;
     private bool _deadLoocEnabled;
@@ -337,6 +337,7 @@ public sealed partial class ChatSystem : SharedChatSystem
     /// <param name="message">The contents of the message</param>
     /// <param name="sender">The sender (Communications Console in Communications Console Announcement)</param>
     /// <param name="playSound">Play the announcement sound</param>
+    /// <param name="announcementSound">Imp. Sound to play</param>
     /// <param name="colorOverride">Optional color for the announcement message</param>
     public void DispatchGlobalAnnouncement(
         string message,
@@ -350,9 +351,9 @@ public sealed partial class ChatSystem : SharedChatSystem
 
         var wrappedMessage = Loc.GetString("chat-manager-sender-announcement-wrap-message", ("sender", sender), ("message", FormattedMessage.EscapeText(message)));
         _chatManager.ChatMessageToAll(ChatChannel.Radio, message, wrappedMessage, default, false, true, colorOverride);
-        if (playSound)
+        if (announcementSound != null && playSound) //imp. gutted default announcement sounds, announcersystem handles them now.
         {
-            _audio.PlayGlobal(announcementSound == null ? DefaultAnnouncementSound : _audio.ResolveSound(announcementSound), Filter.Broadcast(), true, AudioParams.Default.WithVolume(-2f));
+            _audio.PlayGlobal(_audio.ResolveSound(announcementSound), Filter.Broadcast(), true, AudioParams.Default.WithVolume(-2f));
         }
         _adminLogger.Add(LogType.Chat, LogImpact.Low, $"Global station announcement from {sender}: {message}");
     }
@@ -364,7 +365,6 @@ public sealed partial class ChatSystem : SharedChatSystem
     /// <param name="message">The contents of the message</param>
     /// <param name="source">The entity making the announcement (used to determine the station)</param>
     /// <param name="sender">The sender (Communications Console in Communications Console Announcement)</param>
-    /// <param name="playDefaultSound">Play the announcement sound</param>
     /// <param name="announcementSound">Sound to play</param>
     /// <param name="colorOverride">Optional color for the announcement message</param>
     public void DispatchFilteredAnnouncement(
@@ -380,9 +380,9 @@ public sealed partial class ChatSystem : SharedChatSystem
 
         var wrappedMessage = Loc.GetString("chat-manager-sender-announcement-wrap-message", ("sender", sender), ("message", FormattedMessage.EscapeText(message)));
         _chatManager.ChatMessageToManyFiltered(filter, ChatChannel.Radio, message, wrappedMessage, source ?? default, false, true, colorOverride);
-        if (playSound)
+        if (announcementSound != null && playSound) //imp. gutted default announcement sounds, announcersystem handles them now.
         {
-            _audio.PlayGlobal(announcementSound == null ? DefaultAnnouncementSound : _audio.ResolveSound(announcementSound), filter, true, AudioParams.Default.WithVolume(-2f));//imp change- announcementSound?.ToString() ?? DefaultAnnouncementSound to _audio.PlayGlobal(announcementSound == null ? DefaultAnnouncementSound : _audio.ResolveSound(announcementSound),
+            _audio.PlayGlobal(_audio.ResolveSound(announcementSound), filter, true, AudioParams.Default.WithVolume(-2f));//imp change- announcementSound?.ToString() ?? DefaultAnnouncementSound to _audio.PlayGlobal(announcementSound == null ? DefaultAnnouncementSound : _audio.ResolveSound(announcementSound),
         }
         _adminLogger.Add(LogType.Chat, LogImpact.Low, $"Station Announcement from {sender}: {message}");
     }
@@ -393,13 +393,11 @@ public sealed partial class ChatSystem : SharedChatSystem
     /// <param name="source">The entity making the announcement (used to determine the station)</param>
     /// <param name="message">The contents of the message</param>
     /// <param name="sender">The sender (Communications Console in Communications Console Announcement)</param>
-    /// <param name="playDefaultSound">Play the announcement sound</param>
     /// <param name="colorOverride">Optional color for the announcement message</param>
     public void DispatchStationAnnouncement(
         EntityUid source,
         string message,
         string? sender = null,
-        bool playDefaultSound = true,
         SoundSpecifier? announcementSound = null,
         Color? colorOverride = null)
     {
@@ -420,10 +418,7 @@ public sealed partial class ChatSystem : SharedChatSystem
 
         _chatManager.ChatMessageToManyFiltered(filter, ChatChannel.Radio, message, wrappedMessage, source, false, true, colorOverride);
 
-        if (playDefaultSound)
-        {
-            _audio.PlayGlobal(announcementSound?.ToString() ?? DefaultAnnouncementSound, filter, true, AudioParams.Default.WithVolume(-2f));
-        }
+        //imp. gutted default announcement sounds, announcersystem handles them now.
 
         _adminLogger.Add(LogType.Chat, LogImpact.Low, $"Station Announcement on {station} from {sender}: {message}");
     }
@@ -844,12 +839,12 @@ public sealed partial class ChatSystem : SharedChatSystem
     {
         if (desiredType == InGameICChatType.Emote)
         {
-            var newMessage = "*" + message + "*";
+            var newMessage = "*" + message.Replace("*", "") + "*";
             _lastMessageBeforeDeathSystem.AddMessage(source, player, newMessage);
         }
         else
         {
-            var newMessage = TransformSpeech(source, message);
+            var newMessage = TransformSpeech(source, message.Replace("*", ""));
             _lastMessageBeforeDeathSystem.AddMessage(source, player, newMessage);
         }
     }
